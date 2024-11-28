@@ -59,11 +59,36 @@ router.post('/detect', async (req, res) => {
     }
 });
 
+// // GET /api/emotions/history
+// router.get('/history', async (req, res) => {
+//     try {
+//         const history = await Emotion.find().sort({ createdAt: -1 });
+//         res.json(history);
+//     } catch (error) {
+//         console.error('Erreur lors de la récupération de l\'historique :', error);
+//         res.status(500).json({ error: 'Erreur interne du serveur.' });
+//     }
+// });
+
+
 // GET /api/emotions/history
 router.get('/history', async (req, res) => {
     try {
-        const history = await Emotion.find().sort({ createdAt: -1 });
-        res.json(history);
+        const { page = 1, limit = 5 } = req.query; // Pagination avec page et limite
+        const skip = (page - 1) * limit;
+
+        const history = await Emotion.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit));
+
+        const totalItems = await Emotion.countDocuments();
+        const totalPages = Math.ceil(totalItems / limit);
+
+        res.json({
+            history,
+            totalPages,
+        });
     } catch (error) {
         console.error('Erreur lors de la récupération de l\'historique :', error);
         res.status(500).json({ error: 'Erreur interne du serveur.' });
